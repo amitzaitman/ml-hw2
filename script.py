@@ -8,9 +8,7 @@ from sklearn.feature_selection import mutual_info_classif
 from sklearn.model_selection import KFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from relief import relief
 import matplotlib.pyplot as plt
-#Find all correlation between categorical/ limited number of distinct value features
 
 
 
@@ -191,7 +189,11 @@ X_test = Utilities.prepare_data_set(X_test.copy())
 
 
 necessaries_features = ['Avg_environmental_importance', 'Avg_government_satisfaction', 'Avg_education_importance',
-                        'Most_Important_Issue', 'Avg_monthly_expense_on_pets_or_plants', 'Avg residancy altitude',
+                        'Most_Important_Issue_Social', 'Most_Important_Issue_Other','Most_Important_Issue_Military',
+                        'Most_Important_Issue_Healthcare','Most_Important_Issue_Foreign_Affairs',
+                        'Most_Important_Issue_Financial',
+                        'Most_Important_Issue_Environment', 'Most_Important_Issue_Education',
+                        'Avg_monthly_expense_on_pets_or_plants', 'Avg_Residancy_Altitude',
                         'Yearly_ExpensesK', 'Weighted_education_rank', 'Number_of_valued_Kneset_members']
 
 X_train = X_train[necessaries_features]
