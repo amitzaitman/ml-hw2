@@ -9,6 +9,8 @@ from sklearn.model_selection import KFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from sklearn.model_selection import cross_val_score
+from sklearn import svm
 
 
 
@@ -196,12 +198,15 @@ necessaries_features = ['Avg_environmental_importance', 'Avg_government_satisfac
                         'Avg_monthly_expense_on_pets_or_plants', 'Avg_Residancy_Altitude',
                         'Yearly_ExpensesK', 'Weighted_education_rank', 'Number_of_valued_Kneset_members']
 
+
 X_train = X_train[necessaries_features]
 X_train['Vote'] = y_train
 X_validation = X_validation[necessaries_features]
 X_validation['Vote'] = y_validation
 X_test = X_test[necessaries_features]
 X_test['Vote'] = y_test
+
+
 
 # store the prepared sets
 X_train.to_csv('prepared_train.csv', index=False, encoding='utf-8')
