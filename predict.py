@@ -101,3 +101,12 @@ cm = confusion_matrix(y_validation, clf_pred)
 print_cm(cm, parties)
 
 best_model = svm
+
+
+# Load origin file
+df = pd.read_csv('ElectionsData.csv')
+print()
+parties_by_percents = df['Vote'].value_counts(normalize=True) * 100
+print("The division of voters between the various parties:")
+print("The party will win the majority of votes is the", parties_by_percents.index[0])
+print(parties_by_percents)
