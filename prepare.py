@@ -167,8 +167,7 @@ df['Vote'] = df['Vote'].astype('category')
 X, X_test, y, y_test = train_test_split(df.loc[:, df.columns != 'Vote'], df['Vote'], test_size=0.1)
 X_train, X_validation, y_train, y_validation = train_test_split(X, y, test_size=0.15)
 
-# store the raw sets
-X_train['Vote'] = y_train
+# store the raw setsX_train['Vote'] = y_train
 X_train.to_csv('train.csv', index=False, encoding='utf-8')
 X_validation['Vote'] = y_validation
 X_validation.to_csv('validation.csv', index=False, encoding='utf-8')
