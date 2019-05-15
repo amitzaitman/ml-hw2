@@ -9,10 +9,10 @@ from sklearn.naive_bayes import GaussianNB
 
 from sklearn.neighbors import KNeighborsClassifier
 
-# load validation set
-validation_set = pd.read_csv('prepared_validation.csv')
-X = validation_set.drop(columns=['Vote'])
-y = validation_set['Vote']
+# load train set
+train_set = pd.read_csv('prepared_train.csv')
+X = train_set.drop(columns=['Vote'])
+y = train_set['Vote']
 
 # build models
 knn_models = []
@@ -28,6 +28,7 @@ print("Accuracy of naive bayes: ", accuracy.mean())
 svm = svm.SVC()
 accuracy = cross_val_score(svm, X, y, scoring='accuracy', cv=10)
 print("Accuracy of SVM: ", accuracy.mean())
-clf = tree.DecisionTreeClassifier()
+clf = tree.DecisionTreeClassifier(criterion='gini')
 accuracy = cross_val_score(clf, X, y, scoring='accuracy', cv=10)
 print("Accuracy of Decision Tree: ", accuracy.mean())
+
