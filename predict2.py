@@ -69,7 +69,7 @@ validation_hist = validation_set['Vote'].value_counts(normalize=True) * 100
 # Train the model using CV to find the best option foreach number of neighbors
 
 knn_models = []
-for i in range(1,X_train.columns.size + 1):
+for i in range(1,15):
     best_accuracy,best_model = 0, None
     for weight in ['uniform', 'distance']:
         for algo in ['auto', 'ball_tree', 'kd_tree', 'brute']:
