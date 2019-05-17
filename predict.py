@@ -178,7 +178,7 @@ print("total diff =", d['diff'].sum())
 print("correlation:", d['Vote'].corr(d[0]))
 
 
-# In[ ]:
+# In[ ]
 
 
 # Load origin file
