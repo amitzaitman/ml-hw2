@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import cross_val_score
@@ -14,9 +8,6 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
 from matplotlib import pyplot
-
-
-# In[2]:
 
 
 def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
@@ -146,21 +137,21 @@ print("Best Accuracy of Decision Tree with k ={} on validation set:{} - params c
 
 check_model(best_model, 'Decision Tree')
 
-
 ######
 # SVM#
 ######
 best_accuracy,best_model = 0, None
-for gamma in [1 / (X_train.columns.size * X_train.var().mean()), 1 / X_train.columns.size]:
-    for kernel in ['linear', 'poly', 'rbf', 'sigmoid', 'precomputed']:
+for kernel in ['linear', 'poly', 'rbf', 'sigmoid']:
+    for gamma in [1 / (X_train.columns.size * X_train.var().mean()), 1 / X_train.columns.size]:
             for shrinking in [True, False]:
                 for probability in [True, False]:
                     for decision_function_shape in ['ovo','ovr']:
-                        model = svm.SVC(gamma=gamma, kernel=kernel, shrinking=shrinking, probability=probability, decision_function_shape=decision_function_shape)
+                        model = svm.SVC(kernel=kernel, gamma=gamma, shrinking=shrinking, probability=probability, decision_function_shape=decision_function_shape)
                         accuracy = cross_val_score(model, X_train, y_train, scoring='accuracy', cv=10).mean()
                         if best_accuracy < accuracy:
                             best_accuracy, best_model = accuracy, model
-print("Best Accuracy of SVM with cross-validation:{} - params gamma={}, kernel={}, shrinking={}, probability={}, decision_function_shape={}".format(best_accuracy, best_model.gamma, best_model.kernel, best_model.shrinking, best_model.probability, best_model.decision_function_shape))
+    print('finish kernel ', kernel)
+print("Best Accuracy of SVM with cross-validation:{} - params  kernel={},gamma={}, shrinking={}, probability={}, decision_function_shape={}".format(best_accuracy, best_model.kernel, best_model.gamma, best_model.shrinking, best_model.probability, best_model.decision_function_shape))
 best_model.fit(X_train, y_train)
 svm_score = best_model.score(X_validation, y_validation)
 print("Best Accuracy of SVM on validation set - {}".format(svm_score))
