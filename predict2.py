@@ -7,8 +7,8 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
-from matplotlib import pyplot
-
+from matplotlib import pyplot as plt
+from sklearn.utils.multiclass import unique_labels
 
 def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
     """pretty print for confusion matrixes"""
@@ -41,6 +41,16 @@ def check_model(trained_model, model_name):
     print("classification report of {}:".format(model_name))
     print(classification_report(y_validation, pred))
     cm = confusion_matrix(y_validation, pred)
+    np.set_printoptions(precision=2)
+    class_names = np.unique(y_validation.values)
+    # Plot non-normalized confusion matrix
+    plot_confusion_matrix(y_validation, pred, classes=class_names,
+                          title=model_name + '-Confusion matrix, without normalization')
+    plt.savefig(model_name + '-confusion matrix.png', bbox_inches='tight')
+    # Plot normalized confusion matrix
+    plot_confusion_matrix(y_validation, pred, classes=class_names, normalize=True,
+                          title=model_name + '-Normalized confusion matrix')
+    plt.savefig(model_name + '-Normalized confusion matrix.png', bbox_inches='tight')
     print_cm(cm, parties)
     d = hist.to_frame().join(validation_hist)
     d['diff'] = abs(d['Vote'] - d[0])
@@ -48,6 +58,60 @@ def check_model(trained_model, model_name):
     print(d)
     print("total diff =", d['diff'].sum())
     print("correlation:", d['Vote'].corr(d[0]))
+
+
+def plot_confusion_matrix(y_true, y_pred, classes,
+                          normalize=False,
+                          title=None,
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    if not title:
+        if normalize:
+            title = 'Normalized confusion matrix'
+        else:
+            title = 'Confusion matrix, without normalization'
+
+    # Compute confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    # Only use the labels that appear in the data
+    class_names = y_validation.values
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    #print(cm)
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+    ax.figure.colorbar(im, ax=ax)
+    # We want to show all ticks...
+    ax.set(xticks=np.arange(cm.shape[1]),
+           yticks=np.arange(cm.shape[0]),
+           # ... and label them with the respective list entries
+           xticklabels=classes, yticklabels=classes,
+           title=title,
+           ylabel='True label',
+           xlabel='Predicted label')
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+             rotation_mode="anchor")
+
+    # Loop over data dimensions and create text annotations.
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, format(cm[i, j], fmt),
+                    ha="center", va="center",
+                    color="white" if cm[i, j] > thresh else "black")
+    fig.tight_layout()
+    return ax
 
 # load train
 train_set = pd.read_csv('prepared_train.csv')
@@ -63,6 +127,9 @@ y_validation = validation_set['Vote']
 parties = np.unique(y_validation.values)
 validation_hist = validation_set['Vote'].value_counts(normalize=True) * 100
 
+# Hyper Parameter tuning that was done foreach model - take some time to run so it is commented and the best models are
+# located after it
+'''
 ######
 # KNN#
 ######
@@ -141,7 +208,7 @@ check_model(best_model, 'Decision Tree')
 # SVM#
 ######
 best_accuracy,best_model = 0, None
-for kernel in ['linear', 'poly', 'rbf', 'sigmoid']:
+for kernel in ['linear','poly', 'rbf', 'sigmoid']:
     for gamma in [1 / (X_train.columns.size * X_train.var().mean()), 1 / X_train.columns.size]:
             for shrinking in [True, False]:
                 for probability in [True, False]:
@@ -158,6 +225,25 @@ print("Best Accuracy of SVM on validation set - {}".format(svm_score))
 
 # svm check
 check_model(best_model, 'SVM')
+'''
+
+#####################################################################
+# best models found for each model type using hyper-parameter tuning#
+#####################################################################
+# Best Accuracy of KNN with k =6 on validation set:0.8666666666666667 - params weights=distance, algorithm=auto, leaf_size=10
+knn_model = model = KNeighborsClassifier(n_neighbors = 6,weights="distance", algorithm="auto", leaf_size=10)
+# Best Accuracy of NB on validation set:0.822962962962963
+nb_model = gnb = GaussianNB()
+# Best Accuracy of Decision Tree with k =14 on validation set:0.8985185185185185 - params criterion=entropy, splitter=best
+dt_model = DecisionTreeClassifier(max_depth=14, criterion="entropy" , splitter="best")
+# Best Accuracy of SVM with cross-validation:0.9121567172900477 - params  kernel=rbf,gamma=0.13452281058403728, shrinking=True, probability=True, decision_function_shape=ovo
+svm_model = svm.SVC(kernel='rbf', gamma=1 / (X_train.columns.size * X_train.var().mean()), shrinking=True, probability=True, decision_function_shape='ovo')
+
+models = [(knn_model,'KNN'), (nb_model,'NaiveBase'), (dt_model, 'Decision Tree'), (svm_model, 'SVM')]
+
+for model in models:
+    model[0].fit(X_train, y_train)
+    check_model(model[0], model[1])
 
 # Load origin file
 df = pd.read_csv('ElectionsData.csv')
