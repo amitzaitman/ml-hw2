@@ -34,9 +34,6 @@ def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=
         print()
 
 
-def hist_compare(trained_model, model_name):
-
-
 def check_model(trained_model, model_name):
     pred = trained_model.predict(X_validation)
     pred = pd.DataFrame(data=pred.flatten())
@@ -137,7 +134,7 @@ validation_hist = validation_set['Vote'].value_counts(normalize=True) * 100
 
 # Hyper Parameter tuning that was done foreach model - take some time to run so it is commented and the best models are
 # located after it
-
+'''
 ######
 # KNN#
 ######
@@ -252,12 +249,11 @@ models = [(knn_model,'KNN'), (nb_model,'NaiveBase'), (dt_model, 'Decision Tree')
 for model in models:
     model[0].fit(X_train, y_train)
     check_model(model[0], model[1])
-
+'''
 #########################
 # Final Manual Decision #
 #########################
 print("Test Data on SVM")
-X_train.join(X_validation)
 svm_model = svm.SVC(kernel='rbf', gamma=1 / (X_train.columns.size * X_train.var().mean()), shrinking=True, probability=True, decision_function_shape='ovo')
 svm_model.fit(X_train, y_train)
 test_pred = svm_model.predict(X_test)
@@ -292,4 +288,23 @@ df = pd.read_csv('ElectionsData.csv')
 print()
 parties_by_percents = df['Vote'].value_counts(normalize=True) * 100
 print("The division of voters between the various parties:")
+print(parties_by_percents)
+
+# compute shuttels per parties
+prob = svm_model.predict_proba(X_test)
+prob = pd.DataFrame(prob)
+
+from collections import defaultdict
+import csv
+
+shuttles_by_parties = defaultdict(list)
+
+for index, row in prob.iterrows():
+    if row.max() > 0.5:
+        shuttles_by_parties[test_pred[index]].append(index)
+
+with open('shuttles_by_parties.csv', 'w') as f:
+    writer = csv.writer(f)
+    for k,v in shuttles_by_parties.items():
+        writer.writerow([k] + v)
 
