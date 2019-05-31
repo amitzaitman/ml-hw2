@@ -13,7 +13,6 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
-import cv2 as cv
 from matplotlib import pyplot
 
 

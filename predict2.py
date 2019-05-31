@@ -8,6 +8,13 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
 from matplotlib import pyplot as plt
+from collections import defaultdict
+import csv
+from sklearn.utils.multiclass import unique_labels
+from itertools import cycle
+
+from sklearn import svm, datasets
+from sklearn.metrics import roc_curve, auc
 from sklearn.utils.multiclass import unique_labels
 
 def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
@@ -58,6 +65,63 @@ def check_model(trained_model, model_name):
     print(d)
     print("total diff =", d['diff'].sum())
     print("correlation:", d['Vote'].corr(d[0]))
+    printRoc(y_validation, pred, classes=class_names)
+
+
+def printRoc(y_test, y_score, classes):
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(len(classes)):
+        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    # Compute micro-average ROC curve and ROC area
+    fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+    # Compute macro-average ROC curve and ROC area
+
+    # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(len(classes)):
+        mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+
+    # Finally average it and compute AUC
+    mean_tpr /= n_classes
+
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+
+    # Plot all ROC curves
+    plt.figure()
+    plt.plot(fpr["micro"], tpr["micro"],
+             label='micro-average ROC curve (area = {0:0.2f})'
+                   ''.format(roc_auc["micro"]),
+             color='deeppink', linestyle=':', linewidth=4)
+
+    plt.plot(fpr["macro"], tpr["macro"],
+             label='macro-average ROC curve (area = {0:0.2f})'
+                   ''.format(roc_auc["macro"]),
+             color='navy', linestyle=':', linewidth=4)
+
+    colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
+    for i, color in zip(range(n_classes), colors):
+        plt.plot(fpr[i], tpr[i], color=color, lw=lw,
+                 label='ROC curve of class {0} (area = {1:0.2f})'
+                       ''.format(i, roc_auc[i]))
+
+    plt.plot([0, 1], [0, 1], 'k--', lw=lw)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Some extension of Receiver operating characteristic to multi-class')
+    plt.legend(loc="lower right")
+    plt.show()
 
 
 def plot_confusion_matrix(y_true, y_pred, classes,
@@ -131,10 +195,9 @@ y_test = test_set['Vote']
 # get histogram of validation set
 parties = np.unique(y_validation.values)
 validation_hist = validation_set['Vote'].value_counts(normalize=True) * 100
-
+'''
 # Hyper Parameter tuning that was done foreach model - take some time to run so it is commented and the best models are
 # located after it
-'''
 ######
 # KNN#
 ######
@@ -294,17 +357,20 @@ print(parties_by_percents)
 prob = svm_model.predict_proba(X_test)
 prob = pd.DataFrame(prob)
 
-from collections import defaultdict
-import csv
+
 
 shuttles_by_parties = defaultdict(list)
 
+
 for index, row in prob.iterrows():
-    if row.max() > 0.5:
-        shuttles_by_parties[test_pred[index]].append(index)
+   possible_parties = [i for i in range(len(row)) if row[i] > 0.35]
+   for party_id in possible_parties:
+       shuttles_by_parties[svm_model.classes_[party_id]].append(index)
+
+# Show thew number of seats every party should prepare
+[print(i,len(shuttles_by_parties[i])) for i in shuttles_by_parties]
 
 with open('shuttles_by_parties.csv', 'w') as f:
-    writer = csv.writer(f)
-    for k,v in shuttles_by_parties.items():
-        writer.writerow([k] + v)
-
+   writer = csv.writer(f)
+   for k,v in shuttles_by_parties.items():
+       writer.writerow([k] + v)
